@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Encabezado con selector de fecha -->
+<div class="mb-6 flex flex-col sm:flex-row justify-between items-center">
+  <h1 class="text-3xl font-bold">Turnos</h1>
+  <form method="GET" action="{{ url_for('turnos_hoy') }}" class="flex items-center space-x-2">
+    <label for="fechaFilter" class="text-sm">Fecha:</label>
+    <input type="date" id="fechaFilter" name="fecha" value="{{ hoy }}" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded shadow text-white">
+      Ver turnos
+    </button>
+  </form>
+</div>
+
+<!-- Tabla de turnos -->
+<div class="overflow-x-auto bg-gray-800 rounded-lg shadow">
+  <table class="min-w-full">
+    <thead class="bg-gray-700">
+      <tr>
+        <th class="px-6 py-3 text-left">Hora</th>
+        <th class="px-6 py-3 text-left">Cliente</th>
+        <th class="px-6 py-3 text-left">Barbero</th>
+        <th class="px-6 py-3 text-left">Estado</th>
+        <th class="px-6 py-3 text-left">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-700">
+      {% for turno in turnos %}
+      <tr class="hover:bg-gray-700 {% if turno[4] %}bg-gray-700/50{% endif %}">
+        <td class="px-6 py-4">{{ turno[1] }}</td>
+        <td class="px-6 py-4">{{ turno[2] }}</td>
+        <td class="px-6 py-4">{{ turno[3] }}</td>
+        <td class="px-6 py-4">
+          {% if turno[4] %}
+          <span class="text-green-400 font-semibold">Completado</span>
+          {% else %}
+          <span class="text-yellow-400 font-semibold">Pendiente</span>
+          {% endif %}
+        </td>
+        <td class="px-6 py-4 flex space-x-2">
+          {% if not turno[4] %}
+          <!-- Botón para abrir modal y completar turno -->
+          <button type="button" class="complete-btn px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white shadow-md transition duration-200" data-turno-id="{{ turno[0] }}">
+            Completar
+          </button>
+          {% endif %}
+          <!-- Botón para eliminar turno -->
+          <a href="{{ url_for('eliminar_turno', turno_id=turno[0]) }}" 
+             class="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white shadow-md transition duration-200"
+             onclick="return confirm('¿Seguro que deseas eliminar este turno?');">
+            Eliminar
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal para completar turno con método de pago y monto -->
+<div id="completeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md relative">
+    <h2 class="text-2xl font-bold mb-4">Completar Turno</h2>
+    <form id="completeForm" method="POST" action="">
+      <div class="mb-4">
+        <p class="mb-2">Seleccione el método de pago:</p>
+        <label class="inline-flex items-center">
+          <input type="radio" class="form-radio text-blue-600" name="payment_method" value="efectivo" required>
+          <span class="ml-2">Efectivo</span>
+        </label>
+        <label class="inline-flex items-center ml-6">
+          <input type="radio" class="form-radio text-blue-600" name="payment_method" value="transferencia" required>
+          <span class="ml-2">Transferencia</span>
+        </label>
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">Monto cobrado:</label>
+        <input type="number" step="0.01" min="0" name="monto" placeholder="Ingrese el monto" required
+               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring focus:border-blue-500">
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button type="button" id="closeCompleteModal" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded shadow">
+          Cancelar
+        </button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded shadow">
+          Completar Turno
+        </button>
+      </div>
+    </form>
+    <!-- Botón para cerrar modal (X) -->
+    <button id="closeCompleteModalX" class="absolute top-2 right-2 text-gray-400 hover:text-gray-200">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Abrir modal para completar turno
+  const completeButtons = document.querySelectorAll('.complete-btn');
+  const completeModal = document.getElementById('completeModal');
+  const completeForm = document.getElementById('completeForm');
+  const closeCompleteModal = document.getElementById('closeCompleteModal');
+  const closeCompleteModalX = document.getElementById('closeCompleteModalX');
+
+  completeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const turnoId = btn.getAttribute('data-turno-id');
+      // Actualizar acción del formulario con el turnoId
+      completeForm.action = `/turnos/completar/${turnoId}`;
+      completeModal.classList.remove('hidden');
+    });
+  });
+
+  closeCompleteModal.addEventListener('click', () => {
+    completeModal.classList.add('hidden');
+  });
+  closeCompleteModalX.addEventListener('click', () => {
+    completeModal.classList.add('hidden');
+  });
+  completeModal.addEventListener('click', (e) => {
+    if(e.target === completeModal) {
+      completeModal.classList.add('hidden');
+    }
+  });
+});
+</script>
+{% endblock %}

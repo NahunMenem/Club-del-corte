@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-3xl font-bold">Reservar Turno</h1>
+</div>
+
+<div class="bg-gray-800 p-6 rounded-lg">
+    <form method="POST" action="{{ url_for('agregar_turno') }}" id="turnoForm">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Fecha -->
+            <div>
+                <label class="block mb-2">Fecha</label>
+                <input type="date" name="fecha" id="fecha" value="{{ fecha_actual }}" required 
+                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded">
+            </div>
+            
+            <!-- Barbero -->
+            <div>
+                <label class="block mb-2">Barbero</label>
+                <select name="barbero_id" id="barbero" required 
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded">
+                    <option value="">Seleccione un barbero</option>
+                    {% for barbero in barberos %}
+                    <option value="{{ barbero[0] }}">{{ barbero[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Cliente con buscador -->
+            <div class="md:col-span-2">
+                <label class="block mb-2">Cliente</label>
+                <select name="cliente_id" id="cliente" required 
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded">
+                    <option value="">Buscar cliente...</option>
+                    {% for cliente in clientes %}
+                    <option value="{{ cliente[0] }}">{{ cliente[1] }} - {{ cliente[2] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Sección de horarios disponibles - Diseño mejorado -->
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-4">Horarios Disponibles</h2>
+            <div id="loading-horarios" class="hidden text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                <p class="mt-2">Buscando horarios disponibles...</p>
+            </div>
+            
+            <div id="horarios-container" class="hidden">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <!-- Los horarios se cargarán aquí dinámicamente -->
+                </div>
+                <input type="hidden" name="hora" id="hora-seleccionada" required>
+            </div>
+            
+            <div id="no-horarios" class="hidden text-center py-6 bg-gray-700 rounded">
+                <p class="text-gray-300">No hay horarios disponibles para esta fecha y barbero</p>
+            </div>
+            
+            <div id="seleccione-primero" class="text-center py-6 bg-gray-700 rounded">
+                <p class="text-gray-300">Seleccione una fecha y un barbero para ver los horarios disponibles</p>
+            </div>
+        </div>
+        
+        {% if error %}
+        <div class="mt-4 p-3 bg-red-900 text-red-200 rounded">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <button type="submit" id="submit-btn" class="mt-6 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded disabled:opacity-50" disabled>
+            Reservar Turno
+        </button>
+    </form>
+</div>
+
+<!-- Script para el funcionamiento dinámico -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Inicializar Select2 para el buscador de clientes
+    $('#cliente').select2({
+        placeholder: "Buscar cliente...",
+        allowClear: true,
+        width: '100%',
+        theme: 'dark',
+        dropdownParent: $('#turnoForm'),
+        language: {
+            noResults: function() {
+                return "No se encontraron clientes";
+            }
+        }
+    });
+    
+    // Función para cargar horarios disponibles con diseño mejorado
+    function cargarHorariosDisponibles() {
+        const fecha = $('#fecha').val();
+        const barberoId = $('#barbero').val();
+        
+        // Resetear selección
+        $('#hora-seleccionada').val('');
+        $('.hora-btn').removeClass('bg-blue-600 text-white').addClass('bg-gray-700');
+        $('#submit-btn').prop('disabled', true);
+        
+        // Mostrar estados iniciales
+        if (!fecha || !barberoId) {
+            $('#seleccione-primero').removeClass('hidden');
+            $('#horarios-container').addClass('hidden');
+            $('#no-horarios').addClass('hidden');
+            $('#loading-horarios').addClass('hidden');
+            return;
+        }
+        
+        // Mostrar loading
+        $('#seleccione-primero').addClass('hidden');
+        $('#horarios-container').addClass('hidden');
+        $('#no-horarios').addClass('hidden');
+        $('#loading-horarios').removeClass('hidden');
+        
+        $.get('/get_horarios_disponibles', {
+            fecha: fecha,
+            barbero_id: barberoId
+        }, function(data) {
+            $('#loading-horarios').addClass('hidden');
+            
+            if (data.horarios && data.horarios.length > 0) {
+                const container = $('#horarios-container');
+                container.find('.hora-btn').remove(); // Limpiar horarios anteriores
+                
+                // Ordenar horarios
+                const horariosOrdenados = data.horarios.sort();
+                
+                // Agregar cada horario como botón
+                horariosOrdenados.forEach(function(hora) {
+                    const btn = $(`
+                        <button type="button" class="hora-btn px-4 py-2 rounded border border-gray-600 bg-gray-700 hover:bg-gray-600 transition">
+                            ${hora}
+                        </button>
+                    `);
+                    
+                    btn.click(function() {
+                        // Deseleccionar todos
+                        $('.hora-btn').removeClass('bg-blue-600 text-white').addClass('bg-gray-700');
+                        // Seleccionar este
+                        $(this).removeClass('bg-gray-700').addClass('bg-blue-600 text-white');
+                        $('#hora-seleccionada').val(hora);
+                        $('#submit-btn').prop('disabled', false);
+                    });
+                    
+                    container.find('.grid').append(btn);
+                });
+                
+                container.removeClass('hidden');
+            } else {
+                $('#no-horarios').removeClass('hidden');
+            }
+        }).fail(function() {
+            $('#loading-horarios').addClass('hidden');
+            $('#no-horarios').removeClass('hidden').find('p').text('Error al cargar horarios');
+        });
+    }
+    
+    // Eventos para cargar horarios cuando cambian fecha o barbero
+    $('#fecha, #barbero').change(function() {
+        // Pequeño retardo para evitar múltiples llamadas rápidas
+        clearTimeout(window.horariosTimeout);
+        window.horariosTimeout = setTimeout(cargarHorariosDisponibles, 300);
+    });
+    
+    // Cargar horarios al inicio si hay valores seleccionados
+    cargarHorariosDisponibles();
+});
+</script>
+
+<style>
+    /* Estilos para Select2 en modo oscuro */
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #4B5563;
+        color: white;
+    }
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #1F2937;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #F3F4F6;
+    }
+    
+    /* Animación para los botones de hora */
+    .hora-btn {
+        transition: all 0.2s ease;
+    }
+    
+    .hora-btn:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

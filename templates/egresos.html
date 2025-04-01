@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 flex flex-col sm:flex-row justify-between items-center">
+  <h1 class="text-3xl font-bold mb-4 sm:mb-0">Egresos</h1>
+  <button id="openModalEgresoBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded shadow">
+    Registrar Egreso
+  </button>
+</div>
+
+<!-- Filtro de fechas -->
+<form method="GET" action="{{ url_for('egresos') }}" class="mb-6 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+  <div>
+    <label class="text-sm mr-2">Desde:</label>
+    <input type="date" name="desde" value="{{ desde }}" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded">
+  </div>
+  <div>
+    <label class="text-sm mr-2">Hasta:</label>
+    <input type="date" name="hasta" value="{{ hasta }}" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded">
+  </div>
+  <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded shadow">
+    Filtrar
+  </button>
+</form>
+
+<!-- Tabla de egresos -->
+<div class="overflow-x-auto bg-gray-800 rounded-lg shadow">
+  <table class="min-w-full">
+    <thead class="bg-gray-700">
+      <tr>
+        <th class="px-6 py-3 text-left">Fecha</th>
+        <th class="px-6 py-3 text-left">Monto</th>
+        <th class="px-6 py-3 text-left">Descripción</th>
+        <th class="px-6 py-3 text-left">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-700">
+      {% for egreso in egresos %}
+      <tr class="hover:bg-gray-700">
+        <td class="px-6 py-4">{{ egreso[1] }}</td>
+        <td class="px-6 py-4 text-red-400 font-semibold">${{ '%.2f' | format(egreso[2]) }}</td>
+        <td class="px-6 py-4">{{ egreso[3] }}</td>
+        <td class="px-6 py-4">
+          <a href="{{ url_for('eliminar_egreso', egreso_id=egreso[0]) }}" 
+             onclick="return confirm('¿Eliminar este egreso?');"
+             class="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white shadow-md transition">
+            Eliminar
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal para registrar egreso -->
+<div id="modalEgresoOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md relative">
+    <h2 class="text-2xl font-bold mb-4">Registrar Egreso</h2>
+    <form method="POST" action="{{ url_for('egresos') }}">
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="block mb-2 text-gray-300">Fecha</label>
+          <input type="date" name="fecha" required value="{{ hoy }}"
+                 class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded">
+        </div>
+        <div>
+          <label class="block mb-2 text-gray-300">Monto</label>
+          <input type="number" name="monto" required step="0.01" min="0"
+                 class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded">
+        </div>
+        <div>
+          <label class="block mb-2 text-gray-300">Descripción</label>
+          <textarea name="descripcion" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded"></textarea>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end space-x-2">
+        <button type="button" id="closeModalEgresoBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded shadow">
+          Cancelar
+        </button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded shadow">
+          Guardar
+        </button>
+      </div>
+    </form>
+    <button id="closeModalEgresoX" class="absolute top-2 right-2 text-gray-400 hover:text-gray-200">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Script del modal -->
+<script>
+  const openModal = document.getElementById('openModalEgresoBtn');
+  const modalOverlay = document.getElementById('modalEgresoOverlay');
+  const closeBtn = document.getElementById('closeModalEgresoBtn');
+  const closeX = document.getElementById('closeModalEgresoX');
+
+  openModal.addEventListener('click', () => modalOverlay.classList.remove('hidden'));
+  closeBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+  closeX.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+      modalOverlay.classList.add('hidden');
+    }
+  });
+</script>
+{% endblock %}

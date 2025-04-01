@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Barbería</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icono.ico') }}">
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+    .select2-container--default .select2-results__option--highlighted {
+      background-color: #4B5563 !important;
+      color: white !important;
+    }
+    .select2-results__option {
+      color: #E5E7EB;
+      background-color: #374151;
+    }
+    .select2-search__field {
+      color: #E5E7EB !important;
+      background-color: #374151 !important;
+    }
+    /* Ajustes para móviles en select2 */
+    .select2-container .select2-selection--single {
+      height: 36px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 36px !important;
+      font-size: 14px;
+    }
+    /* Estilos para el layout en grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px) {
+      .main-grid {
+        grid-template-columns: 250px 1fr;
+      }
+    }
+  </style>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              600: '#2563eb',
+              700: '#1d4ed8',
+            },
+            dark: {
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <!-- Sidebar para móviles -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+  <button id="sidebarToggle" class="md:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-primary-600 text-white shadow-lg">
+    <i class="fas fa-bars"></i>
+  </button>
+  
+  <div class="main-grid min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-gray-800 dark:bg-gray-800 text-white border-r border-gray-700 p-4 z-50 fixed md:static inset-y-0 left-0 w-64 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+      <div class="flex flex-col h-full">
+        <!-- Logo con mayor tamaño y centrado -->
+        <div class="flex items-center justify-center mb-6">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo Barbería" class="h-32 md:h-40 mx-auto">
+        </div>
+        <!-- Menú -->
+        <nav class="flex-1 space-y-2">
+          <a href="{{ url_for('index') }}" class="flex items-center p-2 rounded hover:bg-gray-700 transition-colors {{ 'bg-gray-700' if request.endpoint == 'index' else '' }}">
+            <i class="fas fa-home mr-2 w-5 text-sm text-center"></i>
+            <span>Inicio</span>
+          </a>
+          
+          <div class="px-2 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Gestión de Turnos
+          </div>
+          
+          <a href="{{ url_for('turnos') }}" class="flex items-center p-2 rounded hover:bg-gray-700 transition-colors {{ 'bg-gray-700' if request.endpoint == 'turnos' else '' }}">
+            <i class="fas fa-calendar-plus mr-2 w-5 text-sm text-center"></i>
+            <span>Reservar Turno</span>
+          </a>
+          
+          <a href="{{ url_for('turnos_hoy') }}" class="flex items-center p-2 rounded hover:bg-gray-700 transition-colors {{ 'bg-gray-700' if request.endpoint == 'turnos_hoy' else '' }}">
+            <i class="fas fa-list-check mr-2 w-5 text-sm text-center"></i>
+            <span>Turnos de Hoy</span>
+          </a>
+          
+          <!-- Nuevo enlace para Dashboard -->
+          <a href="{{ url_for('dashboard') }}" class="flex items-center p-2 rounded hover:bg-gray-700 transition-colors {{ 'bg-gray-700' if request.endpoint == 'dashboard' else '' }}">
+            <i class="fas fa-tachometer-alt mr-2 w-5 text-sm text-center"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('egresos') }}" class="flex items-center p-2 rounded hover:bg-gray-700 transition-colors {{ 'bg-gray-700' if request.endpoint == 'egresos' else '' }}">
+            <i class="fas fa-money-bill-wave mr-2 w-5 text-sm text-center"></i>
+            <span>Egresos</span>
+          </a>
+          
+          
+          <div class="px-2 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Gestión de Personas
+          </div>
+          
+          <a href="{{ url_for('clientes') }}" class="flex items-center p-2 rounded hover:bg-gray-700 transition-colors {{ 'bg-gray-700' if request.endpoint == 'clientes' else '' }}">
+            <i class="fas fa-users mr-2 w-5 text-sm text-center"></i>
+            <span>Clientes</span>
+          </a>
+          
+          <a href="{{ url_for('barberos') }}" class="flex items-center p-2 rounded hover:bg-gray-700 transition-colors {{ 'bg-gray-700' if request.endpoint == 'barberos' else '' }}">
+            <i class="fas fa-user-tie mr-2 w-5 text-sm text-center"></i>
+            <span>Barberos</span>
+          </a>
+        </nav>
+        <!-- Footer -->
+        <footer class="mt-auto text-xs text-gray-400 text-center">
+          <p>v1.0.0</p>
+        </footer>
+      </div>
+    </aside>
+    
+    <!-- Contenido principal -->
+    <main class="p-4 md:p-6 lg:p-8">
+      <div class="max-w-4xl mx-auto w-full">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="mb-3 p-3 rounded-lg {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' }} text-sm">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
+  <script>
+    // Toggle sidebar en móviles
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      sidebarOverlay.classList.toggle('hidden');
+    });
+    
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.add('-translate-x-full');
+      sidebarOverlay.classList.add('hidden');
+    });
+    
+    // Marcar enlace activo basado en la URL
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('.sidebar a');
+      navLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+          link.classList.add('bg-gray-700');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

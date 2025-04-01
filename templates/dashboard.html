@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+  <h1 class="text-4xl font-bold text-center">Dashboard</h1>
+</div>
+
+<!-- Formulario de filtro de fechas -->
+<div class="mb-6 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+  <form method="GET" action="{{ url_for('dashboard') }}" class="flex flex-col sm:flex-row items-center space-x-2">
+    <div>
+      <label for="start_date" class="text-sm mr-2">Desde:</label>
+      <input type="date" id="start_date" name="start_date" value="{{ start_date }}"
+             class="px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring">
+    </div>
+    <div>
+      <label for="end_date" class="text-sm mr-2">Hasta:</label>
+      <input type="date" id="end_date" name="end_date" value="{{ end_date }}"
+             class="px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring">
+    </div>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white shadow">
+      Filtrar
+    </button>
+  </form>
+</div>
+
+<!-- KPIs: Ingresos, Egresos y Neto -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+  <div class="bg-gray-800 p-4 rounded-lg shadow">
+    <h3 class="text-lg font-semibold text-gray-300">Total Ingresos</h3>
+    <p class="text-2xl font-bold text-green-400">${{ '%.2f' | format(total_ganado) }}</p>
+  </div>
+  <div class="bg-gray-800 p-4 rounded-lg shadow">
+    <h3 class="text-lg font-semibold text-gray-300">Total Egresos</h3>
+    <p class="text-2xl font-bold text-red-400">${{ '%.2f' | format(total_egresos) }}</p>
+  </div>
+  <div class="bg-gray-800 p-4 rounded-lg shadow">
+    <h3 class="text-lg font-semibold text-gray-300">Ganancia Neta</h3>
+    <p class="text-2xl font-bold text-blue-400">${{ '%.2f' | format(neto) }}</p>
+  </div>
+</div>
+
+<!-- Top 5 Clientes -->
+<div class="mb-8">
+  <h2 class="text-2xl font-bold mb-4 text-center">Top 5 Clientes con Más Cortes</h2>
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-gray-800 rounded-lg shadow">
+      <thead class="bg-gray-700">
+        <tr>
+          <th class="px-6 py-3 text-left">Cliente</th>
+          <th class="px-6 py-3 text-left">Cortes</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-600">
+        {% for client in top_clients %}
+        <tr class="hover:bg-gray-700">
+          <td class="px-6 py-4">{{ client[1] }}</td>
+          <td class="px-6 py-4">{{ client[2] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Sección de Gráficos -->
+<div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- Gráfico de Dona -->
+  <div>
+    <h2 class="text-2xl font-bold mb-4 text-center">Total Ganado (Dona)</h2>
+    <div class="max-w-md mx-auto">
+      <canvas id="donutChart"></canvas>
+    </div>
+  </div>
+  <!-- Gráfico de Barras -->
+  <div>
+    <h2 class="text-2xl font-bold mb-4 text-center">Total Ganado (Barras)</h2>
+    <div class="max-w-md mx-auto">
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Incluir Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const paymentData = {{ payment_data | tojson }};
+    const labels = [];
+    const dataValues = [];
+
+    paymentData.forEach(item => {
+      labels.push(item[0] ? item[0] : "No especificado");
+      dataValues.push(item[1] ? parseFloat(item[1]) : 0);
+    });
+
+    const ctxDonut = document.getElementById('donutChart').getContext('2d');
+    new Chart(ctxDonut, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: dataValues,
+          backgroundColor: ['#4CAF50', '#2196F3'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: false }
+        }
+      }
+    });
+
+    const ctxBar = document.getElementById('barChart').getContext('2d');
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total Ganado',
+          data: dataValues,
+          backgroundColor: ['#4CAF50', '#2196F3'],
+          borderColor: ['#388E3C', '#1976D2'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return "$" + value;
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

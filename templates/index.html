@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto text-center py-12">
+  <h1 class="text-4xl font-bold mb-6">Bienvenido al Sistema de Barbería</h1>
+  <p class="text-xl mb-8">Gestión de clientes, barberos y turnos</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+    <a href="{{ url_for('clientes') }}" class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition shadow-lg">
+      <h2 class="text-2xl font-semibold mb-2">Clientes</h2>
+      <p>Administra tu lista de clientes</p>
+    </a>
+    <a href="{{ url_for('barberos') }}" class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition shadow-lg">
+      <h2 class="text-2xl font-semibold mb-2">Barberos</h2>
+      <p>Gestiona tus barberos</p>
+    </a>
+    <a href="{{ url_for('turnos') }}" class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition shadow-lg">
+      <h2 class="text-2xl font-semibold mb-2">Turnos</h2>
+      <p>Reserva y gestiona turnos</p>
+    </a>
+  </div>
+</div>
+{% endblock %}
