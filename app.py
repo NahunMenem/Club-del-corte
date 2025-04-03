@@ -16,10 +16,9 @@ DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://negocio_54gh_user:lwclY7A
 
 # Horarios disponibles
 HORARIOS_DISPONIBLES = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-    "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-    "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
+    "09:00", "09:40", "10:20", "11:00", "11:40", "12:20",
+    "13:00", "13:40", "17:00", "17:40", "18:20", "19:00", "19:40",
+    "20:20", "21:00" ,"21:40" , "22:20"
 ]
 
 def get_db_connection():
@@ -322,10 +321,10 @@ def dashboard():
             """, (start_date, end_date))
             payment_data = cur.fetchall()
 
-            # Total de egresos
+            # Total de 
             cur.execute("""
                 SELECT SUM(monto)
-                FROM egresos
+                FROM egresos_cristian
                 WHERE fecha >= %s AND fecha <= %s;
             """, (start_date, end_date))
             total_egresos = cur.fetchone()[0] or 0
